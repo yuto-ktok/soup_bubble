@@ -1,0 +1,95 @@
+<html><body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/planck-js/0.1.44/planck-with-testbed.min.js"></script>
+  <script>
+    planck.testbed('Bridge', function(testbed) {
+  var pl = planck, Vec2 = pl.Vec2;
+  var world = new pl.World(Vec2(0, 0));
+
+  var COUNT = 20;
+  var CIRCLE_COUNT = 500;
+  var circles = [];
+
+  var circle1;
+
+  var ground = world.createBody();
+  ground.createFixture(pl.Edge(Vec2(-40.0, 0.0), Vec2(40.0, 0.0)), 0.0);
+
+  var bridgeRect = pl.Box(0.5, 0.125);
+  var bridgeRect2 = pl.Box(0.125, 0.5);
+
+  var bridgeFD = {
+    density: 20.0,
+    friction: 0.2
+  };
+
+
+  var firstBody = world.createDynamicBody(Vec2(-14.5, 5.0));
+  firstBody.createFixture(bridgeRect, bridgeFD);
+  var prevBody = firstBody;
+
+  for (var i = 1; i < COUNT; ++i) {
+    var body = world.createDynamicBody(Vec2(-14.5 + 1.0 * i, 5.0));
+    body.createFixture(bridgeRect, bridgeFD);
+
+    var anchor = Vec2(-15.0 + 1.0 * i, 5.0);
+    world.createJoint(pl.RevoluteJoint({}, prevBody, body, anchor));
+
+    prevBody = body;
+  }
+
+  for (var i = 0; i < COUNT; ++i) {
+    var body = world.createDynamicBody(Vec2(- 14.0 + 1.0 * (COUNT - 1), 5.5 + 1.0 * i));
+    body.createFixture(bridgeRect2, bridgeFD);
+
+    var anchor = Vec2(-14.0 + 1.0 * (COUNT - 1), 5.0 + 1.0 * i);
+    world.createJoint(pl.RevoluteJoint({}, prevBody, body, anchor));
+
+    prevBody = body;
+  }
+
+  for (var i = 0; i < COUNT; ++i) {
+    var body = world.createDynamicBody(Vec2(-14.5 + 1.0 * (COUNT - 1) - 1.0 * i,  6.0 + 1.0 * (COUNT - 1)));
+    body.createFixture(bridgeRect, bridgeFD);
+
+    var anchor = Vec2(-14.0 + 1.0 * (COUNT - 1) - 1.0 * i, 5.0 + 1.0 * COUNT);
+    world.createJoint(pl.RevoluteJoint({}, prevBody, body, anchor));
+
+    prevBody = body;
+  }
+
+  for (var i = 0; i < COUNT; ++i) {
+    var body = world.createDynamicBody(Vec2(-15.0, 4.5 + 1.0 * COUNT - 1.0 * i));
+    body.createFixture(bridgeRect2, bridgeFD);
+
+    var anchor = Vec2(-15.0, 5.0 + 1.0 * COUNT - 1.0 * i);
+    world.createJoint(pl.RevoluteJoint({}, prevBody, body, anchor));
+
+    prevBody = body;
+  }
+
+  var anchor = Vec2(-15.0, 5.0);
+  world.createJoint(pl.RevoluteJoint({}, prevBody, firstBody, anchor));
+
+  var shape = pl.Circle(0.5);
+  for (var i = 0; i < CIRCLE_COUNT; ++i) {
+    var body = world.createDynamicBody(Vec2(-6.0 + Math.random() * 10, 6.0 + Math.random() * 10));
+    body.createFixture(shape, 1.0);
+    circles.push(body);
+  }
+
+
+  testbed.step = function() {
+    for (var i = 0; i < CIRCLE_COUNT; i++) {
+      var c = circles[i];
+      var position = c.getPosition();
+      var d = Vec2(Math.random() - 0.5, Math.random() - 0.5);
+      d.normalize();
+      var F = Vec2.mul(d, 100.0);
+      c.applyForce(F, position, false);
+    }
+  }
+
+  return world;
+});
+  </script>
+</body></html>
